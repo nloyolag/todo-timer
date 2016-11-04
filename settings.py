@@ -1,0 +1,31 @@
+import csv
+
+class Singleton(class):
+    instance = None
+    def __new__(class_, *args, **kwargs):
+        if not isinstance(class_.instance, class_):
+            class_.instance = object.__new__(class_, *args, **kwargs)
+        return class_.instance
+
+class BaseSettings(class):
+    def __init__(self):
+        self.filename = "settings.csv"
+        self.gui_color = ""
+        self.default_timer = ""
+
+    def load_settings(self):
+        values = None
+        with open(self.filename, 'rb') as f:
+            reader = csv.reader(f)
+            values = list(reader)
+        self.gui_color = values[0][0]
+        self.default_timer = values[0][1]
+
+    def change_settings(self, gui_color, default_timer):
+        self.gui_color = gui_color
+        self.default_timer = default_timer
+        with open(self.filename, 'w') as f:
+            f.write(gui_color + ',' + default_timer)
+
+class Logger(Singleton, BaseSettings):
+    pass
