@@ -27,5 +27,5 @@ class BaseSettings(class):
         with open(self.filename, 'w') as f:
             f.write(gui_color + ',' + default_timer)
 
-class Logger(Singleton, BaseSettings):
+class Settings(Singleton, BaseSettings):
     pass

@@ -1,4 +1,4 @@
-import Task
+from model import Task
 
 class TaskIterator(class):
     def __init__(self, tasks):

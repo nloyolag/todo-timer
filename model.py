@@ -8,6 +8,9 @@ class Task(object):
     def get_name(self):
         return self.name
 
+    def get_priority(self):
+        return self.priority
+
     def get_elapsed_time(self):
         return self.elapsed_time
 
