@@ -42,7 +42,7 @@ class AddTaskWindow(QtGui.QDialog):
         self.formLayout.addRow("", self.submit)
 
         self.setLayout(self.formLayout)
-        self.setGeometry(300,300,280,170)
+        self.setGeometry(300,300,780,670)
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -94,13 +94,14 @@ class MainWindow(QtGui.QMainWindow):
         grid.addWidget(self.time,2,0)
         grid.addWidget(self.set,2,1)
         grid.addWidget(self.lcd,3,0,1,3)
+        grid.setRowMinimumHeight(3,150)
         grid.addWidget(self.create_task,4,0)
         grid.addWidget(self.list,4,1)
 
         centralwidget.setLayout(grid)
 
         self.setCentralWidget(centralwidget)
-        self.setGeometry(300,300,280,170)
+        self.setGeometry(300,300,780,670)
 
     def Set(self):
         global t, minutes, seconds, mode
