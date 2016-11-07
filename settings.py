@@ -1,13 +1,13 @@
 import csv
 
-class Singleton(class):
+class Singleton(object):
     instance = None
     def __new__(class_, *args, **kwargs):
         if not isinstance(class_.instance, class_):
             class_.instance = object.__new__(class_, *args, **kwargs)
         return class_.instance
 
-class BaseSettings(class):
+class BaseSettings(object):
     def __init__(self):
         self.filename = "settings.csv"
         self.gui_color = ""

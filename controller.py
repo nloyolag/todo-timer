@@ -19,6 +19,7 @@ def load_tasks():
     tasks = [Task(x[0], x[1], x[2], x[3]) for x in tasks]
     tasks.sort(key=lambda x: x.priority, reverse=True)
     task_iterator = TaskIterator(tasks)
+    return tasks
     #TODO update interface
 
 def create_task(priority, name, elapsed_time, boundary_time):
@@ -30,5 +31,3 @@ def create_task(priority, name, elapsed_time, boundary_time):
 
 def alarm():
     pass
-
-    

@@ -1,6 +1,6 @@
 from model import Task
 
-class TaskIterator(class):
+class TaskIterator(object):
     def __init__(self, tasks):
         self.tasks = tasks
         self.length = len(tasks)

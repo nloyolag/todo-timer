@@ -1,10 +1,48 @@
 import sys
+import controller
 from PyQt4 import QtGui, QtCore
 
 minutes = 0
 seconds = 0
 mode = 0
 alarm = QtGui.QSound("alarm.mp3")
+icon_key = {
+    "High": "icons/high.png",
+    "Medium": "icons/medium.png",
+    "Low": "icons/low.png"
+}
+
+class AddTaskWindow(QtGui.QDialog):
+
+    def __init__(self):
+        QtGui.QDialog.__init__(self)
+        self.initInterface()
+
+    def Submit(self):
+        name = str(self.nameField.text())
+        priority = str(self.priorityField.currentText())
+        time = self.timeField.time().toString()
+        elapsed_time = "00:00:00"
+        controller.create_task(priority, name, elapsed_time, time)
+        self.close()
+
+    def initInterface(self):
+        self.nameField = QtGui.QLineEdit()
+        self.priorityField = QtGui.QComboBox()
+        self.priorityField.addItems(["High", "Medium", "Low"])
+        self.timeField = QtGui.QTimeEdit(self)
+        self.timeField.setDisplayFormat("mm:ss")
+        self.submit = QtGui.QPushButton("Submit Task", self)
+        self.submit.clicked.connect(self.Submit)
+        self.formLayout = QtGui.QFormLayout()
+
+        self.formLayout.addRow("Name", self.nameField)
+        self.formLayout.addRow("Priority", self.priorityField)
+        self.formLayout.addRow("Task Time", self.timeField)
+        self.formLayout.addRow("", self.submit)
+
+        self.setLayout(self.formLayout)
+        self.setGeometry(300,300,280,170)
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -28,8 +66,23 @@ class MainWindow(QtGui.QMainWindow):
         self.stop = QtGui.QPushButton("Stop", self)
         self.stop.clicked.connect(lambda: self.timer.stop())
 
+        self.create_task = QtGui.QPushButton("Add Task", self)
+        self.create_task.clicked.connect(lambda: AddTaskWindow().exec_())
+
         self.reset = QtGui.QPushButton("Reset", self)
         self.reset.clicked.connect(self.Reset)
+
+        self.list = QtGui.QListWidget()
+        tasks = controller.load_tasks()
+        self.items = []
+        for task in tasks:
+            item = QtGui.QListWidgetItem(
+                QtGui.QIcon(icon_key[task.priority]),
+                task.name,
+                self.list
+            )
+            item.setData(QtCore.Qt.UserRole, task)
+            self.items.append(item)
 
         self.time = QtGui.QTimeEdit(self)
         self.time.setDisplayFormat("mm:ss")
@@ -41,6 +94,8 @@ class MainWindow(QtGui.QMainWindow):
         grid.addWidget(self.time,2,0)
         grid.addWidget(self.set,2,1)
         grid.addWidget(self.lcd,3,0,1,3)
+        grid.addWidget(self.create_task,4,0)
+        grid.addWidget(self.list,4,1)
 
         centralwidget.setLayout(grid)
 
