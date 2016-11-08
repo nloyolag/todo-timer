@@ -1,9 +1,13 @@
 class Task(object):
-    def __init__(self, priority, name, elapsed_time, boundary_time):
+    def __init__(self, id, priority, name, elapsed_time, boundary_time):
+        self.id = id
         self.priority = priority
         self.name = name
         self.elapsed_time = elapsed_time
         self.boundary_time = boundary_time
+
+    def get_id(self):
+        return self.id
 
     def get_name(self):
         return self.name
