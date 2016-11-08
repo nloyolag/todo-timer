@@ -1,5 +1,6 @@
 import sys
 import controller
+from datetime import datetime
 from PyQt4 import QtGui, QtCore
 
 minutes = 0
@@ -14,6 +15,8 @@ icon_key = {
 
 class AddTaskWindow(QtGui.QDialog):
 
+    task_signal = QtCore.pyqtSignal()
+
     def __init__(self):
         QtGui.QDialog.__init__(self)
         self.initInterface()
@@ -24,6 +27,7 @@ class AddTaskWindow(QtGui.QDialog):
         time = self.timeField.time().toString()
         elapsed_time = "00:00:00"
         controller.create_task(priority, name, elapsed_time, time)
+        self.task_signal.emit()
         self.close()
 
     def initInterface(self):
@@ -50,6 +54,29 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.initInterface()
 
+    def updateTasks(self):
+        self.list.clear()
+        tasks = controller.load_tasks()
+        self.items = []
+        for task in tasks:
+            item = QtGui.QListWidgetItem(
+                QtGui.QIcon(icon_key[task.priority]),
+                task.name + " Elapsed Time: " + task.elapsed_time,
+                self.list
+            )
+            item.setData(QtCore.Qt.UserRole, task)
+            self.items.append(item)
+
+    def populateActiveTask(self):
+        item = self.list.currentItem()
+        data = item.data(QtCore.Qt.UserRole).toPyObject()
+        task_time = datetime.strptime(data.boundary_time,"%H:%M:%S")
+        hours = 0
+        minutes = task_time.minute
+        seconds = task_time.second
+        self.taskName.setText(data.name)
+        self.taskTime.setTime(QtCore.QTime(hours, minutes, seconds))
+
     def initInterface(self):
         centralwidget = QtGui.QWidget(self)
         self.lcd = QtGui.QLCDNumber(self)
@@ -57,58 +84,74 @@ class MainWindow(QtGui.QMainWindow):
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.Time)
 
-        self.set = QtGui.QPushButton("Set", self)
-        self.set.clicked.connect(self.Set)
+        self.countdownInput = QtGui.QPushButton("Countdown with Input", self)
+        self.countdownInput.clicked.connect(lambda: self.Countdown("input"))
+        self.countdownTask = QtGui.QPushButton("Countdown with Task time", self)
+        self.countdownTask.clicked.connect(lambda: self.Countdown("task"))
 
-        self.start = QtGui.QPushButton("Start", self)
-        self.start.clicked.connect(self.Start)
+        self.timerUnlimited = QtGui.QPushButton("Start Unlimited Timer", self)
+        self.timerUnlimited.clicked.connect(lambda: self.Timer("unlimited"))
+        self.timerTask = QtGui.QPushButton("Start Task Timer", self)
+        self.timerTask.clicked.connect(lambda: self.Timer("task"))
 
         self.stop = QtGui.QPushButton("Stop", self)
         self.stop.clicked.connect(lambda: self.timer.stop())
 
         self.create_task = QtGui.QPushButton("Add Task", self)
-        self.create_task.clicked.connect(lambda: AddTaskWindow().exec_())
+        add_task_window = AddTaskWindow()
+        add_task_window.task_signal.connect(self.updateTasks)
+        self.create_task.clicked.connect(lambda: add_task_window.exec_())
 
         self.reset = QtGui.QPushButton("Reset", self)
         self.reset.clicked.connect(self.Reset)
 
         self.list = QtGui.QListWidget()
-        tasks = controller.load_tasks()
-        self.items = []
-        for task in tasks:
-            item = QtGui.QListWidgetItem(
-                QtGui.QIcon(icon_key[task.priority]),
-                task.name,
-                self.list
-            )
-            item.setData(QtCore.Qt.UserRole, task)
-            self.items.append(item)
+        self.list.currentItemChanged.connect(self.populateActiveTask)
+        self.updateTasks()
 
-        self.time = QtGui.QTimeEdit(self)
-        self.time.setDisplayFormat("mm:ss")
+        self.countdownTime = QtGui.QTimeEdit(self)
+        self.countdownTime.setDisplayFormat("mm:ss")
+
+        self.taskName = QtGui.QLineEdit(self)
+        self.taskName.setEnabled(False)
+        self.taskTime = QtGui.QTimeEdit(self)
+        self.taskTime.setDisplayFormat("mm:ss")
+        self.taskTime.setEnabled(False)
+
         grid = QtGui.QGridLayout(self)
 
-        grid.addWidget(self.start,1,0)
-        grid.addWidget(self.stop,1,1)
-        grid.addWidget(self.reset,1,2)
-        grid.addWidget(self.time,2,0)
-        grid.addWidget(self.set,2,1)
-        grid.addWidget(self.lcd,3,0,1,3)
-        grid.setRowMinimumHeight(3,150)
-        grid.addWidget(self.create_task,4,0)
-        grid.addWidget(self.list,4,1)
+        grid.addWidget(QtGui.QLabel("General Controls: "),1,0)
+        grid.addWidget(self.reset,1,1)
+        grid.addWidget(self.stop,1,2)
+        grid.addWidget(QtGui.QLabel("Timer Controls: "),2,0)
+        grid.addWidget(self.timerUnlimited,2,1)
+        grid.addWidget(self.timerTask,2,2)
+        grid.addWidget(QtGui.QLabel("Countdown Controls: "),3,0)
+        grid.addWidget(self.countdownTime,3,1)
+        grid.addWidget(self.countdownInput,3,2)
+        grid.addWidget(self.countdownTask,3,3)
+        grid.addWidget(QtGui.QLabel("Selected Task: "),4,0)
+        grid.addWidget(self.taskName,4,1)
+        grid.addWidget(self.taskTime,4,2)
+        grid.addWidget(self.lcd,5,0,1,4)
+        grid.setRowMinimumHeight(5,150)
+        grid.addWidget(self.create_task,6,0)
+        grid.addWidget(self.list,6,1,1,4)
 
         centralwidget.setLayout(grid)
 
         self.setCentralWidget(centralwidget)
         self.setGeometry(300,300,780,670)
 
-    def Set(self):
+    def Countdown(self, method):
         global t, minutes, seconds, mode
 
-        t = self.time.time()
-        self.lcd.display(t.toString())
+        if method == "input":
+            t = self.countdownTime.time()
+        elif method == "task":
+            pass
 
+        self.lcd.display(t.toString())
         self.timer.start(1000)
 
         minutes = t.minute()
@@ -128,8 +171,14 @@ class MainWindow(QtGui.QMainWindow):
         time = "{0}:{1}".format(minutes,seconds)
         self.lcd.display(time)
 
-    def Start(self):
+    def Timer(self, method):
         global seconds, minutes, mode
+
+        if method == "unlimited":
+            pass
+        elif method == "task":
+            pass
+
         mode = 0
         self.timer.start(1000)
 
