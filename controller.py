@@ -1,13 +1,16 @@
-# Unlimited Stopwatch
-# Stopwatch with upper limit
-# Countdown with user input
-# Countdown with task time
-
 import csv
 from iterator import TaskIterator
 from model import Task
 from factory import TaskFactory
 from settings import Settings
+
+#####################################################
+# Controller file
+# Description: File that implements the controller,
+#              providing methods that interact with
+#              the model and send results to the
+#              view.
+#####################################################
 
 tasks = []
 task_iterator = None
@@ -16,6 +19,12 @@ priority_mapper = {
     "Medium": 2,
     "Low": 3
 }
+
+#####################################################
+# Method: load_tasks
+# Description: Method that loads the tasks from
+#              the model using the TaskIterator.
+#####################################################
 
 def load_tasks():
     with open('tasks.csv', 'rb') as f:
@@ -26,12 +35,24 @@ def load_tasks():
     task_iterator = TaskIterator(tasks)
     return tasks
 
+#####################################################
+# Method: create_task
+# Description: Method that creates a new task
+#              using the TaskFactory.
+#####################################################
+
 def create_task(priority, name, elapsed_time, boundary_time):
     tasks = load_tasks()
     id = len(tasks) + 1
     task = TaskFactory.create_task(id, priority, name, elapsed_time, boundary_time)
     tasks.sort(key=lambda x: priority_mapper[x.priority])
     task_iterator = TaskIterator(tasks)
+
+#####################################################
+# Method: delete_task
+# Description: Method that deletes a task based
+#              on its id and updates the model.
+#####################################################
 
 def delete_task(task):
     tasks = load_tasks()
@@ -49,6 +70,12 @@ def delete_task(task):
         for task in tasks:
             line = str(task.id) + ',' + str(task.priority) + ',' + str(task.name) + ',' + str(task.elapsed_time) + ',' + str(task.boundary_time) + '\n'
             f.write(line)
+
+#####################################################
+# Method: edit_task
+# Description: Method that edits the fields of a task
+#              based on its id.
+#####################################################
 
 def edit_task(id, priority, name, elapsed_time, boundary_time):
     tasks = load_tasks()

@@ -1,5 +1,12 @@
 from model import Task
 
+#####################################################
+# Class: Iterator
+# Description: Implementation of the iterator
+#              pattern, which provides a standard
+#              class to iterate Task objects.
+#####################################################
+
 class TaskIterator(object):
     def __init__(self, tasks):
         self.tasks = tasks

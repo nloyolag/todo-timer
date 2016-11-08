@@ -1,5 +1,12 @@
 from model import Task
 
+#####################################################
+# Class: TaskFactory
+# Description: Implements the factory pattern,
+#              providing a standarized class for
+#              object creation.
+#####################################################
+
 class TaskFactory(object):
     @staticmethod
     def create_task(id, priority, name, elapsed_time, boundary_time):

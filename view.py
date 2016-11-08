@@ -3,6 +3,14 @@ import controller
 from datetime import datetime
 from PyQt4 import QtGui, QtCore
 
+#####################################################
+# View file
+# Description: File that hosts all view code. It
+#              creates and updates the interface,
+#              and calls the controller when
+#              requiring interaction with tasks.
+#####################################################
+
 t = 0
 minutes = 0
 seconds = 0
@@ -13,6 +21,17 @@ icon_key = {
     "Medium": "icons/medium.png",
     "Low": "icons/low.png"
 }
+
+#####################################################
+# Class: AddTaskWindow
+# Description: Window that appears when a new task
+#              is created.
+# Methods: - Submit: Submits the form and sends the
+#            information to the controller to create
+#            a task.
+#          - initInterface: Initializes the form and
+#            its fields
+#####################################################
 
 class AddTaskWindow(QtGui.QDialog):
 
@@ -51,6 +70,17 @@ class AddTaskWindow(QtGui.QDialog):
 
         self.setLayout(self.formLayout)
         self.setGeometry(300,300,780,670)
+
+#####################################################
+# Class: EditTaskWindow
+# Description: Window that appears when a task
+#              is edited.
+# Methods: - Submit: Submits the form and sends the
+#            information to the controller to edit
+#            a task.
+#          - initInterface: Initializes the form and
+#            its fields with the values of a task
+#####################################################
 
 class EditTaskWindow(QtGui.QDialog):
 
@@ -97,6 +127,36 @@ class EditTaskWindow(QtGui.QDialog):
 
         self.setLayout(self.formLayout)
         self.setGeometry(300,300,480,270)
+
+#####################################################
+# Class: MainWindow
+# Description: Window that hosts the main
+#              functionality of the application.
+# Methods: - updateTasks: Updated the ListWidget
+#            with any changes in the tasks of the
+#            model.
+#          - deleteTask: Method that takes the
+#            currently selected task and calls
+#            the delete function in the controller.
+#          - populateActiveTask: Method that fills
+#            the time and text field representing
+#            the currently selected task.
+#          - callEditWindow: Method that invokes
+#            the edition window with the selected
+#            task
+#          - initInterface: Method that initializes
+#            the interface with all its elements
+#          - Countdown: Calls the clock in countdown
+#            mode, and applies the time of a task if
+#            specified.
+#          - Reset: Method that resets the running
+#            timer.
+#          - Timer: Calls the clock in timer mode,
+#            and applies the time of a task if
+#            specified.
+#          - Time: Method that updates the clock,
+#            tasks and interface each second.
+#####################################################
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -308,6 +368,8 @@ class MainWindow(QtGui.QMainWindow):
         time = "{0}:{1}".format(minutes,seconds)
 
         self.lcd.display(time)
+
+# Execution of the application
 
 def main():
     app = QtGui.QApplication(sys.argv)

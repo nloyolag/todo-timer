@@ -1,3 +1,11 @@
+#####################################################
+# Class: Task
+# Description: Class the represents the model of the
+#              application. It is a representation
+#              of how the tasks are stored in the
+#              corresponding CSV file.
+#####################################################
+
 class Task(object):
     def __init__(self, id, priority, name, elapsed_time, boundary_time):
         self.id = id
