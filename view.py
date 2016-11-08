@@ -1,5 +1,6 @@
 import sys
 import controller
+import re
 from datetime import datetime
 from PyQt4 import QtGui, QtCore
 
@@ -23,6 +24,54 @@ icon_key = {
 }
 
 #####################################################
+# Class: SettingsWindow
+# Description: Window that appears when the users
+#              wishes to modify the settings.
+# Methods: - Submit: Submits the form and sends the
+#            information to the controller to change
+#            the settings.
+#          - initInterface: Initializes the form and
+#            its fields
+#####################################################
+
+class SettingsWindow(QtGui.QDialog):
+
+    # Creation of Command pattern object. It fires an event when it
+    # finishes its responsibilities
+    settings_signal = QtCore.pyqtSignal()
+
+    def __init__(self):
+        QtGui.QDialog.__init__(self)
+        self.initInterface()
+
+    def Submit(self):
+        color = str(self.colorField.text())
+        match = re.search(r'^#(?:[0-9a-fA-F]{1,2}){3}$', color)
+        if match:
+            controller.change_settings(color)
+            # Example of Command pattern execution.
+            # The window notifies it has finished its execution
+            self.settings_signal.emit()
+            self.close()
+        else:
+            error = QtGui.QMessageBox.warning(self,"Error","Please submit a valid HEX Color")
+
+    def initInterface(self):
+        self.colorField = QtGui.QLineEdit()
+        self.submit = QtGui.QPushButton("Submit Settings", self)
+        self.submit.clicked.connect(self.Submit)
+        self.formLayout = QtGui.QFormLayout()
+
+        self.formLayout.addRow("Color (HEX Code)", self.colorField)
+        self.formLayout.addRow("", self.submit)
+
+        color = controller.get_color()
+        self.colorField.setText(color)
+
+        self.setLayout(self.formLayout)
+        self.setGeometry(300,300,780,670)
+
+#####################################################
 # Class: AddTaskWindow
 # Description: Window that appears when a new task
 #              is created.
@@ -35,6 +84,8 @@ icon_key = {
 
 class AddTaskWindow(QtGui.QDialog):
 
+    # Creation of Command pattern object. It fires an event when it
+    # finishes its responsibilities
     task_signal = QtCore.pyqtSignal()
 
     def __init__(self):
@@ -50,6 +101,8 @@ class AddTaskWindow(QtGui.QDialog):
         self.nameField.setText("")
         self.timeField.setTime(QtCore.QTime(0, 0, 0))
         self.priorityField.setCurrentIndex(0)
+        # Example of Command pattern execution.
+        # The window notifies it has finished its execution
         self.task_signal.emit()
         self.close()
 
@@ -84,6 +137,8 @@ class AddTaskWindow(QtGui.QDialog):
 
 class EditTaskWindow(QtGui.QDialog):
 
+    # Creation of Command pattern object. It fires an event when it
+    # finishes its responsibilities
     task_signal = QtCore.pyqtSignal()
 
     def __init__(self, task):
@@ -98,6 +153,8 @@ class EditTaskWindow(QtGui.QDialog):
         time = self.timeField.time().toString()
         elapsed_time = "00:00:00"
         controller.edit_task(id, priority, name, elapsed_time, time)
+        # Example of Command pattern execution.
+        # The window notifies it has finished its execution
         self.task_signal.emit()
         self.close()
 
@@ -132,12 +189,17 @@ class EditTaskWindow(QtGui.QDialog):
 # Class: MainWindow
 # Description: Window that hosts the main
 #              functionality of the application.
-# Methods: - updateTasks: Updated the ListWidget
+# Methods: - updateTasks: Updates the ListWidget
 #            with any changes in the tasks of the
 #            model.
+#          - updateStyle: Updates the window color
+#            after changing the settings.
 #          - deleteTask: Method that takes the
 #            currently selected task and calls
 #            the delete function in the controller.
+#          - completeTask: Method that takes the
+#            currently selected task and calls the
+#            complete function in the controller.
 #          - populateActiveTask: Method that fills
 #            the time and text field representing
 #            the currently selected task.
@@ -177,10 +239,21 @@ class MainWindow(QtGui.QMainWindow):
             item.setData(QtCore.Qt.UserRole, task)
             self.items.append(item)
 
+    def updateStyle(self):
+        color = controller.get_color()
+        style = "QMainWindow{background-color:" + color + ";}"
+        self.setStyleSheet(style)
+
     def deleteTask(self):
         item = self.list.currentItem()
         data = item.data(QtCore.Qt.UserRole).toPyObject()
         controller.delete_task(data)
+        self.updateTasks()
+
+    def completeTask(self):
+        item = self.list.currentItem()
+        data = item.data(QtCore.Qt.UserRole).toPyObject()
+        controller.complete_task(data)
         self.updateTasks()
 
     def populateActiveTask(self):
@@ -224,12 +297,25 @@ class MainWindow(QtGui.QMainWindow):
 
         self.create_task = QtGui.QPushButton("Add Task", self)
         self.add_task_window = AddTaskWindow()
+        # Example of the Observer pattern. The MainWindow observes
+        # the events from task_signal, and executes a function
+        # when signaled.
         self.add_task_window.task_signal.connect(self.updateTasks)
         self.create_task.clicked.connect(lambda: self.add_task_window.exec_())
-        self.delete_task = QtGui.QPushButton("Delete or Complete Task", self)
+        self.delete_task = QtGui.QPushButton("Delete Task", self)
         self.delete_task.clicked.connect(lambda: self.deleteTask())
+        self.complete_task = QtGui.QPushButton("Complete Task", self)
+        self.complete_task.clicked.connect(lambda: self.completeTask())
         self.edit_task = QtGui.QPushButton("Edit Task", self)
         self.edit_task.clicked.connect(lambda: self.callEditWindow())
+
+        self.settings_button = QtGui.QPushButton("Settings", self)
+        self.settings_window = SettingsWindow()
+        # Example of the Observer pattern. The MainWindow observes
+        # the events from settings_signal, and executes a function
+        # when signaled.
+        self.settings_window.settings_signal.connect(self.updateStyle)
+        self.settings_button.clicked.connect(lambda: self.settings_window.exec_())
 
         self.reset = QtGui.QPushButton("Reset", self)
         self.reset.clicked.connect(self.Reset)
@@ -267,15 +353,19 @@ class MainWindow(QtGui.QMainWindow):
         grid.setRowMinimumHeight(5,150)
         grid.addWidget(self.create_task,6,0)
         grid.setRowMinimumHeight(6,200)
-        grid.addWidget(self.list,6,1,3,4)
+        grid.addWidget(self.list,6,1,5,4)
         grid.addWidget(self.edit_task,7,0)
         grid.addWidget(self.delete_task,8,0)
+        grid.addWidget(self.complete_task,9,0)
+        grid.addWidget(self.settings_button,10,0)
 
         centralwidget.setLayout(grid)
 
         self.setCentralWidget(centralwidget)
         self.setGeometry(300,300,780,670)
 
+    # Example of Strategy pattern. Depending on the method type
+    # received, the execution changes for the Time method.
     def Countdown(self, method):
         global t, minutes, seconds, mode, is_task
 
@@ -309,6 +399,8 @@ class MainWindow(QtGui.QMainWindow):
         time = "{0}:{1}".format(minutes,seconds)
         self.lcd.display(time)
 
+    # Example of Strategy pattern. Depending on the method type
+    # received, the execution changes for the Time method.
     def Timer(self, method):
         global seconds, minutes, mode, t, is_task
 
@@ -374,6 +466,9 @@ class MainWindow(QtGui.QMainWindow):
 def main():
     app = QtGui.QApplication(sys.argv)
     main = MainWindow()
+    color = controller.get_color()
+    style = "QMainWindow{background-color:" + color + ";}"
+    main.setStyleSheet(style)
     main.show()
 
     sys.exit(app.exec_())

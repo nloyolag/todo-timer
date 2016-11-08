@@ -25,7 +25,7 @@ class BaseSettings(object):
     def __init__(self):
         self.filename = "settings.csv"
         self.gui_color = ""
-        self.default_timer = ""
+        self.load_settings()
 
     def load_settings(self):
         values = None
@@ -33,13 +33,14 @@ class BaseSettings(object):
             reader = csv.reader(f)
             values = list(reader)
         self.gui_color = values[0][0]
-        self.default_timer = values[0][1]
 
-    def change_settings(self, gui_color, default_timer):
+    def change_settings(self, gui_color):
         self.gui_color = gui_color
-        self.default_timer = default_timer
         with open(self.filename, 'w') as f:
-            f.write(gui_color + ',' + default_timer)
+            f.write(gui_color)
+
+    def get_color(self):
+        return self.gui_color
 
 #####################################################
 # Class: Settings
